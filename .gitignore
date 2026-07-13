@@ -1,0 +1,19 @@
+# Secrets — API keys must NEVER be committed. This is a hard project constraint.
+.env
+.env.local
+.env*.local
+
+# Dependencies
+/node_modules
+
+# Next.js build output
+/.next
+/out
+
+# Misc
+*.log
+.DS_Store
+next-env.d.ts
+
+# TypeScript incremental build info
+*.tsbuildinfo
