@@ -21,6 +21,15 @@ import type { Genre, Proposal } from "./types";
 export const PLACEHOLDER_LYRIC =
   "The licensed lyric that finishes your thought lands right here.";
 
+/**
+ * Demo stand-in for line-completion. NOT a real lyric — reproducing lyric text is
+ * the exact thing the licensing boundary exists to prevent. Marks where the real
+ * next words of the chosen song would be inserted once a lyrics license is connected.
+ */
+export function demoContinuation(title: string): string {
+  return `⟨ next lyric line of "${title}" — add a lyrics license ⟩`;
+}
+
 /** A small bank of real, easily-resolved songs per genre for the keyless demo. */
 const DEMO_SONGS: Record<Genre, ReadonlyArray<{ song: string; artist: string }>> = {
   Pop: [
@@ -88,12 +97,9 @@ export function demoPropose(feeling: string, genre: Genre): Proposal[] {
 
   const feltShort = feeling.trim().replace(/\s+/g, " ").slice(0, 60);
 
-  return ordered.map(({ song, artist }, i) => ({
+  return ordered.map(({ song, artist }) => ({
     song,
     artist,
-    why_it_fits:
-      i === 0
-        ? `That feeling — "${feltShort}" — sits right at the center of "${song}." ${artist} already found the words.`
-        : `"${song}" by ${artist} holds this too, if the first one isn't it.`,
+    why_it_fits: `${artist} already put "${feltShort}" into words in "${song}."`,
   }));
 }

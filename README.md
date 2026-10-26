@@ -95,7 +95,6 @@ lib/
 components/
   PhoneFrame.tsx          device shell — status bar, dynamic island, bezel
   MessageThread.tsx       iMessage-style thread + composer + song "share" bubble
-  UnsaidKeyboard.tsx      Mood strip + suggestion panel + functional QWERTY
-  SuggestionCard.tsx      the match: why_it_fits → metadata → lyric slot → actions
+  UnsaidKeyboard.tsx      Mood strip + song-options panel + functional QWERTY
   GenreSelector.tsx       user-mutable Mood/genre chips
 ```

@@ -1,23 +1,12 @@
 // The messaging half of the mock: a contact header, the conversation thread, and
 // the compose field. The draft mirrors what the user "types" on the Unsaid
-// keyboard below. Tapping send (or inserting a match) drops a song bubble into
-// the thread — the completed, unsaid thought.
+// keyboard below — their words plus any lyric line-completion they picked. Sending
+// drops the finished line into the thread.
 
 import { useEffect, useRef } from "react";
 
-/** A message in the mock thread. Text bubbles, plus the Unsaid "song share". */
-export type ThreadMessage =
-  | { id: string; role: "in" | "out"; kind: "text"; text: string }
-  | {
-      id: string;
-      role: "out";
-      kind: "song";
-      whyItFits: string;
-      title: string;
-      artist: string;
-      artworkUrl: string;
-      listenUrl: string;
-    };
+/** A message in the mock thread. */
+export type ThreadMessage = { id: string; role: "in" | "out"; text: string };
 
 interface Props {
   messages: ThreadMessage[];
@@ -52,38 +41,11 @@ export default function MessageThread({ messages, draft, canSend, onSend }: Prop
         <div className="thread">
           <div className="stamp">Today 9:41 AM</div>
 
-          {messages.map((m) =>
-            m.kind === "text" ? (
-              <div key={m.id} className={`bubble ${m.role}`}>
-                {m.text}
-              </div>
-            ) : (
-              <div key={m.id} className="song-bubble">
-                <p className="why">{m.whyItFits}</p>
-                <div className="song-row">
-                  {m.artworkUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img className="art" src={m.artworkUrl} alt="" />
-                  ) : null}
-                  <div className="meta">
-                    <span className="t">{m.title}</span>
-                    <span className="a">{m.artist}</span>
-                  </div>
-                  {m.listenUrl ? (
-                    <a
-                      className="play"
-                      href={m.listenUrl}
-                      target="_blank"
-                      rel="noreferrer noopener"
-                      aria-label="Listen"
-                    >
-                      ▶
-                    </a>
-                  ) : null}
-                </div>
-              </div>
-            ),
-          )}
+          {messages.map((m) => (
+            <div key={m.id} className={`bubble ${m.role}`}>
+              {m.text}
+            </div>
+          ))}
           <div ref={endRef} />
         </div>
 

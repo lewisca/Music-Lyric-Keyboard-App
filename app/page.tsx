@@ -1,10 +1,10 @@
 "use client";
 
 // The prototype, presented as a phone. The user "types" a raw feeling on the
-// Unsaid custom keyboard (or a hardware keyboard); when they pause on ~3+ words,
-// the propose → resolve → verify loop runs behind /api/match and the matched song
-// surfaces in the keyboard's suggestion panel. Sending it drops the song into the
-// message thread — the unsaid thought, finished.
+// Unsaid custom keyboard; when they pause on ~3+ words, the propose → resolve →
+// verify loop runs behind /api/match and song options surface above the keys.
+// Picking one appends that song's next lyric words to the draft (line-completion);
+// sending drops the finished line into the thread.
 //
 // All matching happens server-side; the browser never holds an API key.
 
@@ -14,7 +14,7 @@ import MessageThread from "@/components/MessageThread";
 import UnsaidKeyboard from "@/components/UnsaidKeyboard";
 import type { ThreadMessage } from "@/components/MessageThread";
 import { GENRES } from "@/lib/types";
-import type { ApiResponse, EmptyResult, Genre, MatchResult } from "@/lib/types";
+import type { ApiResponse, Genre, MatchResult } from "@/lib/types";
 
 const MIN_WORDS = 3;
 const DEBOUNCE_MS = 800;
@@ -25,23 +25,24 @@ function countWords(text: string): number {
 }
 
 const SEED_THREAD: ThreadMessage[] = [
-  { id: "seed", role: "in", kind: "text", text: "you went quiet on me. you good?" },
+  { id: "seed", role: "in", text: "you went quiet on me. you good?" },
 ];
 
 export default function Home() {
   const [text, setText] = useState("");
   const [genre, setGenre] = useState<Genre>(GENRES[0]);
-  const [result, setResult] = useState<MatchResult | null>(null);
-  const [empty, setEmpty] = useState<EmptyResult | null>(null);
+  const [results, setResults] = useState<MatchResult[]>([]);
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState("");
   const [thread, setThread] = useState<ThreadMessage[]>(SEED_THREAD);
 
   const requestId = useRef(0);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const resultRef = useRef<MatchResult | null>(null);
   const idRef = useRef(0);
-  resultRef.current = result;
+  const textRef = useRef("");
+  textRef.current = text;
+  // After a line-completion is inserted, don't immediately re-match on the new
+  // (longer) text — wait until the user edits again.
+  const suppressMatch = useRef<string | null>(null);
 
   // ── The propose → resolve → verify call ──────────────────────────────────
   const runMatch = useCallback(async (feeling: string, forGenre: Genre) => {
@@ -57,22 +58,12 @@ export default function Home() {
       const data = (await res.json()) as ApiResponse;
       if (id !== requestId.current) return; // superseded
 
-      if (data.status === "match") {
-        setResult(data);
-        setEmpty(null);
-      } else {
-        setResult(null);
-        setEmpty(data);
-      }
+      setResults(data.status === "matches" ? data.results : []);
     } catch {
       if (id !== requestId.current) return;
-      setResult(null);
-      setEmpty({ status: "empty", reason: "Couldn't reach the matcher." });
+      setResults([]);
     } finally {
-      if (id === requestId.current) {
-        setLoading(false);
-        setStatus("");
-      }
+      if (id === requestId.current) setLoading(false);
     }
   }, []);
 
@@ -80,16 +71,16 @@ export default function Home() {
   useEffect(() => {
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
 
+    // Just inserted a completion into this exact text → stay collapsed.
+    if (text === suppressMatch.current) return;
+
     if (countWords(text) < MIN_WORDS) {
       requestId.current++; // cancel any in-flight response
-      setResult(null);
-      setEmpty(null);
+      setResults([]);
       setLoading(false);
-      setStatus("");
       return;
     }
 
-    setStatus("…");
     debounceTimer.current = setTimeout(() => void runMatch(text, genre), DEBOUNCE_MS);
     return () => {
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
@@ -97,33 +88,40 @@ export default function Home() {
   }, [text, genre, runMatch]);
 
   // ── Keyboard input (on-screen keys + hardware) ────────────────────────────
-  const handleChar = useCallback(
-    (ch: string) => setText((t) => (t + ch).slice(0, MAX_LEN)),
-    [],
-  );
-  const handleBackspace = useCallback(() => setText((t) => t.slice(0, -1)), []);
+  const handleChar = useCallback((ch: string) => {
+    suppressMatch.current = null; // user is editing again → allow re-matching
+    setText((t) => (t + ch).slice(0, MAX_LEN));
+  }, []);
+  const handleBackspace = useCallback(() => {
+    suppressMatch.current = null;
+    setText((t) => t.slice(0, -1));
+  }, []);
 
-  // Insert the matched song into the thread and reset the draft.
-  const insertSong = useCallback(() => {
-    const r = resultRef.current;
-    if (!r) return;
-    setThread((prev) => [
-      ...prev,
-      {
-        id: `m${++idRef.current}`,
-        role: "out",
-        kind: "song",
-        whyItFits: r.whyItFits,
-        title: r.canonical.title,
-        artist: r.canonical.artist,
-        artworkUrl: r.canonical.artworkUrl,
-        listenUrl: r.canonical.listenUrl,
-      },
-    ]);
+  // Pick a song → append its next lyric words to the draft (line-completion) and
+  // collapse the options. The message isn't sent yet — the user reviews, then sends.
+  const selectSong = useCallback((r: MatchResult) => {
+    if (r.lyricKind === "licensed" && r.trackingUrl) {
+      // eslint-disable-next-line no-console
+      console.log("[tracking hook] lyric impression — would fire pixel:", r.trackingUrl);
+    }
+    setText((t) => {
+      const next = `${t.trimEnd()} ${r.continuation}`.slice(0, MAX_LEN);
+      suppressMatch.current = next; // don't re-open options for the completed line
+      return next;
+    });
     requestId.current++; // cancel any in-flight response
+    setResults([]);
+  }, []);
+
+  // Send the composed message (their words + any inserted lyric line) to the thread.
+  const sendMessage = useCallback(() => {
+    const body = textRef.current.trim();
+    if (!body) return;
+    setThread((prev) => [...prev, { id: `m${++idRef.current}`, role: "out", text: body }]);
+    requestId.current++;
+    suppressMatch.current = null;
     setText("");
-    setResult(null);
-    setEmpty(null);
+    setResults([]);
   }, []);
 
   // Hardware keyboard convenience (nice on desktop; the on-screen keys are primary).
@@ -135,7 +133,7 @@ export default function Home() {
         handleBackspace();
       } else if (e.key === "Enter") {
         e.preventDefault();
-        insertSong();
+        sendMessage();
       } else if (e.key === " ") {
         e.preventDefault();
         handleChar(" ");
@@ -145,26 +143,25 @@ export default function Home() {
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [handleChar, handleBackspace, insertSong]);
+  }, [handleChar, handleBackspace, sendMessage]);
 
   return (
     <PhoneFrame>
       <MessageThread
         messages={thread}
         draft={text}
-        canSend={!!result}
-        onSend={insertSong}
+        canSend={text.trim().length > 0}
+        onSend={sendMessage}
       />
       <UnsaidKeyboard
         genre={genre}
         loading={loading}
-        status={status}
-        result={result}
-        empty={empty}
+        results={results}
         onGenreChange={setGenre}
+        onSelect={selectSong}
         onKey={handleChar}
         onBackspace={handleBackspace}
-        onReturn={insertSong}
+        onReturn={sendMessage}
       />
     </PhoneFrame>
   );

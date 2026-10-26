@@ -84,9 +84,14 @@ export interface Resolver {
  * when a licensed resolver populated them.
  */
 export interface MatchResult {
-  status: "match";
   whyItFits: string;
   canonical: Canonical;
+  /**
+   * The lyric words to append to the user's message when this option is picked
+   * (line-completion). Real lyric words on a licensed source; a clearly-marked
+   * placeholder in the keyless demo (no lyric license).
+   */
+  continuation: string;
   /** Present only on a licensed resolution — the UI renders these when set. */
   lyricSnippet?: string;
   attribution?: string;
@@ -101,4 +106,10 @@ export interface EmptyResult {
   reason: string;
 }
 
-export type ApiResponse = MatchResult | EmptyResult;
+/** The verified song options for a feeling, best fit first. */
+export interface MatchesResult {
+  status: "matches";
+  results: MatchResult[];
+}
+
+export type ApiResponse = MatchesResult | EmptyResult;

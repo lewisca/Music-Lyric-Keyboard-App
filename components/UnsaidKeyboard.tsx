@@ -9,8 +9,7 @@
 
 import { useState } from "react";
 import GenreSelector from "./GenreSelector";
-import SuggestionCard from "./SuggestionCard";
-import type { EmptyResult, Genre, MatchResult } from "@/lib/types";
+import type { Genre, MatchResult } from "@/lib/types";
 
 const LETTER_ROWS = [
   ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
@@ -27,10 +26,9 @@ const SYMBOL_ROWS = [
 interface Props {
   genre: Genre;
   loading: boolean;
-  status: string;
-  result: MatchResult | null;
-  empty: EmptyResult | null;
+  results: MatchResult[];
   onGenreChange: (g: Genre) => void;
+  onSelect: (r: MatchResult) => void;
   onKey: (char: string) => void;
   onBackspace: () => void;
   onReturn: () => void;
@@ -39,10 +37,9 @@ interface Props {
 export default function UnsaidKeyboard({
   genre,
   loading,
-  status,
-  result,
-  empty,
+  results,
   onGenreChange,
+  onSelect,
   onKey,
   onBackspace,
   onReturn,
@@ -62,32 +59,45 @@ export default function UnsaidKeyboard({
     <div className="keyboard">
       {/* 1 — genre / mood strip */}
       <div className="genre-strip">
-        <span className="lbl">Mood</span>
+        <span className="si-logo" aria-label="Say It keyboard">SI</span>
         <GenreSelector value={genre} onChange={onGenreChange} />
       </div>
 
-      {/* 2 — Unsaid suggestion panel */}
-      <div className="panel">
-        <div className="panel-head">
-          <span className="wordmark">
-            Unsaid<span className="dot">.</span>
-          </span>
-          <span className={`panel-status${loading ? " loading" : ""}`}>
-            {loading ? "finding the words…" : status}
-          </span>
+      {/* 2 — song options (only shown while matches exist; collapses on select) */}
+      {results.length > 0 ? (
+        <div className="panel">
+          <div className="options">
+            {results.map((r, i) => (
+              <button
+                key={`${r.canonical.title}-${i}`}
+                className="option-row"
+                onClick={() => onSelect(r)}
+              >
+                {r.canonical.artworkUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img className="art" src={r.canonical.artworkUrl} alt="" />
+                ) : (
+                  <span className="art" aria-hidden />
+                )}
+                <span className="meta">
+                  <span className="t">
+                    {r.canonical.title} · {r.canonical.artist}
+                  </span>
+                  <span className="sub">
+                    {r.lyricKind === "licensed" && r.lyricSnippet
+                      ? r.lyricSnippet
+                      : r.whyItFits}
+                  </span>
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
-
-        {result ? (
-          <SuggestionCard result={result} onInsert={onReturn} />
-        ) : empty ? (
-          <p className="hint">{empty.reason}</p>
-        ) : (
-          <p className="hint">
-            Type what you can&rsquo;t quite say — Unsaid finds the song that already
-            said it.
-          </p>
-        )}
-      </div>
+      ) : loading ? (
+        <div className="panel">
+          <p className="panel-loading">finding songs…</p>
+        </div>
+      ) : null}
 
       {/* 3 — QWERTY keys */}
       <div className="keys">

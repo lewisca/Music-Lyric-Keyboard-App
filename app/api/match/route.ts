@@ -12,8 +12,14 @@
 import { NextResponse } from "next/server";
 import { propose } from "@/lib/propose";
 import { getResolver } from "@/lib/resolvers";
+import { demoContinuation } from "@/lib/demo";
 import { GENRES } from "@/lib/types";
-import type { ApiResponse, Genre } from "@/lib/types";
+import type { ApiResponse, Genre, MatchResult } from "@/lib/types";
+
+/** First ~10 words of a licensed snippet — the words line-completion inserts. */
+function firstWords(text: string, n = 10): string {
+  return text.split(/\s+/).filter(Boolean).slice(0, n).join(" ");
+}
 
 // Always run this fresh — never cache a match (matches are per-request, and a
 // licensed resolver's lyric snippet must never be persisted).
@@ -57,36 +63,39 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse>>
     });
   }
 
-  // STAGE 2 + 3 — RESOLVE then VERIFY, best proposal first. The resolver confirms
-  // the song against a real catalog; `found` is the verify/suppress gate. Take the
-  // first proposal that resolves — anything that doesn't is dropped SILENTLY. We
-  // never show an unverified suggestion.
+  // STAGE 2 + 3 — RESOLVE then VERIFY every proposal (in parallel). The resolver
+  // confirms each song against a real catalog; `found` is the verify/suppress gate.
+  // Proposals that don't resolve are dropped SILENTLY — we never show an unverified
+  // suggestion. The survivors become the song options the user picks from.
   const resolver = getResolver();
 
-  for (const proposal of proposals) {
-    const resolution = await resolver.resolve({
-      song: proposal.song,
-      artist: proposal.artist,
-    });
-    if (!resolution.found) continue;
+  const resolved = await Promise.all(
+    proposals.slice(0, 4).map((p) => resolver.resolve({ song: p.song, artist: p.artist })),
+  );
 
-    return NextResponse.json({
-      status: "match",
-      // Coherence comes from the model's original sentence — always shown.
-      whyItFits: proposal.why_it_fits,
+  const results: MatchResult[] = [];
+  resolved.forEach((resolution, i) => {
+    if (!resolution.found) return;
+    results.push({
+      whyItFits: proposals[i].why_it_fits,
       canonical: resolution.canonical,
-      // Lyric slot: "licensed" carries real snippet fields; "placeholder" tells the
-      // UI to render the demo slot where the licensed line will appear.
+      // Line-completion words: real licensed lyric words, else a demo placeholder.
+      continuation: resolution.lyricSnippet
+        ? firstWords(resolution.lyricSnippet)
+        : demoContinuation(resolution.canonical.title),
       ...(resolution.lyricKind ? { lyricKind: resolution.lyricKind } : {}),
       ...(resolution.lyricSnippet ? { lyricSnippet: resolution.lyricSnippet } : {}),
       ...(resolution.attribution ? { attribution: resolution.attribution } : {}),
       ...(resolution.trackingUrl ? { trackingUrl: resolution.trackingUrl } : {}),
     });
+  });
+
+  if (results.length === 0) {
+    return NextResponse.json({
+      status: "empty",
+      reason: "Found a feeling, but no verified song to match it. Try again.",
+    });
   }
 
-  // Nothing resolved → graceful empty state.
-  return NextResponse.json({
-    status: "empty",
-    reason: "Found a feeling, but no verified song to match it. Try again.",
-  });
+  return NextResponse.json({ status: "matches", results });
 }
