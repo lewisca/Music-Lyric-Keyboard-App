@@ -1,8 +1,8 @@
 {
-  "name": "unsaid",
+  "name": "say-it",
   "version": "0.1.0",
   "private": true,
-  "description": "Unsaid — an emotional-articulation prototype that finishes a thought with a licensed song lyric. Non-commercial portfolio proof-of-concept.",
+  "description": "Say It — an emotional-articulation prototype that finishes a thought with a licensed song lyric. Non-commercial portfolio proof-of-concept.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

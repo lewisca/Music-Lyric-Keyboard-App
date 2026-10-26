@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Unsaid",
+  title: "Say It",
   description:
     "Finish an unspoken feeling with a licensed song lyric. A propose → resolve → verify prototype.",
 };

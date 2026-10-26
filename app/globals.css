@@ -213,7 +213,7 @@ body {
   border-bottom-right-radius: 5px;
 }
 
-/* Song "share" bubble inserted by the Unsaid keyboard */
+/* Song "share" bubble inserted by the Say It keyboard */
 .song-bubble {
   align-self: flex-end;
   max-width: 82%;
@@ -357,7 +357,7 @@ body {
   cursor: default;
 }
 
-/* ── Unsaid keyboard region ───────────────────────────────── */
+/* ── Say It keyboard region ───────────────────────────────── */
 .keyboard {
   flex: none;
   background: var(--kbd-backdrop);
@@ -423,7 +423,7 @@ body {
   color: var(--accent);
 }
 
-/* The Unsaid suggestion panel — song options the user picks from. */
+/* The Say It options panel — song options the user picks from. */
 .panel {
   padding: 4px 12px;
   border-bottom: 0.5px solid var(--hairline);

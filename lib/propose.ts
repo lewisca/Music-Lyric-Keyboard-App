@@ -21,7 +21,7 @@ const MODEL = "claude-haiku-4-5";
 
 function systemPrompt(genre: Genre): string {
   return [
-    `You are the matching engine for "Unsaid", a tool that helps someone finish an`,
+    `You are the matching engine for "Say It", a tool that helps someone finish an`,
     `unspoken feeling by pointing them to a song that already captured it.`,
     ``,
     `The user gives you a raw, half-formed feeling. Propose 1 to 3 real, well-known`,

@@ -1,6 +1,6 @@
 # Architecture
 
-Unsaid is built around one loop — **propose → resolve → verify** — and one hard
+Say It is built around one loop — **propose → resolve → verify** — and one hard
 rule: **lyric text is never stored.** The resolution *source* sits behind a single
 interface, so what the demo can legally display is a function of which source is
 plugged in — not of the architecture, which never changes.
@@ -10,7 +10,7 @@ plugged in — not of the architecture, which never changes.
 A language model is very good at reading an emotion and naming a song that fits
 it. It is *not* a source of truth about whether that song exists, who recorded
 it, or what its lyrics are — models hallucinate titles, misattribute artists, and
-cannot legally reproduce lyrics. So Unsaid uses the model for what it's good at
+cannot legally reproduce lyrics. So Say It uses the model for what it's good at
 (semantic matching) and a catalog for what it's good at (existence, canonical
 metadata, and — with a license — a rights-cleared snippet).
 

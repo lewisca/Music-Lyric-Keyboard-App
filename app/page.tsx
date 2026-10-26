@@ -1,7 +1,7 @@
 "use client";
 
 // The prototype, presented as a phone. The user "types" a raw feeling on the
-// Unsaid custom keyboard; when they pause on ~3+ words, the propose → resolve →
+// Say It custom keyboard; when they pause on ~3+ words, the propose → resolve →
 // verify loop runs behind /api/match and song options surface above the keys.
 // Picking one appends that song's next lyric words to the draft (line-completion);
 // sending drops the finished line into the thread.
@@ -11,7 +11,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import PhoneFrame from "@/components/PhoneFrame";
 import MessageThread from "@/components/MessageThread";
-import UnsaidKeyboard from "@/components/UnsaidKeyboard";
+import SayItKeyboard from "@/components/SayItKeyboard";
 import type { ThreadMessage } from "@/components/MessageThread";
 import { GENRES } from "@/lib/types";
 import type { ApiResponse, Genre, MatchResult } from "@/lib/types";
@@ -153,7 +153,7 @@ export default function Home() {
         canSend={text.trim().length > 0}
         onSend={sendMessage}
       />
-      <UnsaidKeyboard
+      <SayItKeyboard
         genre={genre}
         loading={loading}
         results={results}

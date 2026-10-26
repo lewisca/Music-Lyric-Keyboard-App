@@ -1,5 +1,5 @@
 // The messaging half of the mock: a contact header, the conversation thread, and
-// the compose field. The draft mirrors what the user "types" on the Unsaid
+// the compose field. The draft mirrors what the user "types" on the Say It
 // keyboard below — their words plus any lyric line-completion they picked. Sending
 // drops the finished line into the thread.
 

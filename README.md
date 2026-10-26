@@ -1,6 +1,6 @@
-# Unsaid
+# Say It
 
-An emotional-articulation prototype. You type a raw, half-formed feeling; Unsaid
+An emotional-articulation prototype. You type a raw, half-formed feeling; Say It
 finds a song whose *meaning* captures it — so a thought you couldn't finish gets
 finished for you.
 
@@ -52,13 +52,13 @@ the empty state.
 
 Set `RESOLVER=musixmatch` and provide `MUSIXMATCH_API_KEY` (paid plan). The
 propose loop is unchanged; the result card then also renders the lyric snippet,
-its attribution, and fires the tracking hook. If the key is missing, Unsaid falls
+its attribution, and fires the tracking hook. If the key is missing, Say It falls
 back to iTunes — no key is ever *required* to run.
 
 ## The interface — a keyboard, mocked
 
 Because the real product is an **iOS keyboard extension**, the demo is presented
-as a phone: an iMessage-style thread on top, and the **Unsaid custom keyboard**
+as a phone: an iMessage-style thread on top, and the **Say It custom keyboard**
 below (a Mood/genre strip, a live suggestion panel, and a working QWERTY). You
 "type" a feeling on the on-screen keys (a hardware keyboard also works); when you
 pause on ~3+ words, the matched song surfaces in the keyboard's suggestion panel
@@ -95,6 +95,6 @@ lib/
 components/
   PhoneFrame.tsx          device shell — status bar, dynamic island, bezel
   MessageThread.tsx       iMessage-style thread + composer + song "share" bubble
-  UnsaidKeyboard.tsx      Mood strip + song-options panel + functional QWERTY
+  SayItKeyboard.tsx       Mood strip + song-options panel + functional QWERTY
   GenreSelector.tsx       user-mutable Mood/genre chips
 ```

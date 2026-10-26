@@ -1,6 +1,6 @@
-// The "Unsaid" custom keyboard. Three stacked surfaces, top to bottom:
+// The "Say It" custom keyboard. Three stacked surfaces, top to bottom:
 //   1. a genre strip (the repurposed predictive-text bar) — user-mutable mood,
-//   2. the Unsaid suggestion panel — the live song match above the keys,
+//   2. the Say It options panel — live song options above the keys,
 //   3. a functional QWERTY keyboard (letters + a symbols layer, shift, space,
 //      backspace, return).
 //
@@ -34,7 +34,7 @@ interface Props {
   onReturn: () => void;
 }
 
-export default function UnsaidKeyboard({
+export default function SayItKeyboard({
   genre,
   loading,
   results,
